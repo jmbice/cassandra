@@ -1,0 +1,14 @@
+Mine:
+cassandra-stress user profile=/Users/jordan_bice/documents/hack-reactor/sdc/Cassandra/soundCloud.yml n=10000 ops\(song_data=16, insert_comment=1, insert_reply=1, edit_comment=1, edit_reply=1\) no-warmup cl=QUORUM -graph file=summary.html
+cassandra-stress user profile=/Users/jordan_bice/documents/hack-reactor/sdc/Cassandra/soundCloud.yml n=10000 ops\(song_data=16, insert_comment=1, insert_reply=1, edit_comment=1, edit_reply=1\) cl=QUORUM -graph file=summaryCold.html
+
+
+John's example:
+cassandra-stress user profile=/Users/johnlopez/Documents/Sync/Work/HackReactor/SDC/musicPlayerService/database/songs.yaml ops\(insert=1,single=1\) -rate threads=10 -graph file=firstTest.html title=first-unoptimized-test
+
+
+
+
+
+
+cassandra-stress user profile=/Users/jordan_bice/documents/hack-reactor/sdc/Cassandra/soundCloud.yml ops\(song_data=16, insert_comment=1, insert_reply=1, edit_comment=1, edit_reply=1\) no-warmup cl=QUORUM -graph file=summary.html

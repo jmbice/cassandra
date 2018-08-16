@@ -1,0 +1,85 @@
+### DML ###
+
+# Keyspace Name
+keyspace: soundofcloud
+
+# The CQL for creating a keyspace (optional if it already exists)
+# keyspace_definition: |
+#   CREATE KEYSPACE stresscql WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+# Table name
+table: songs
+
+# The CQL for creating a table you wish to stress (optional if it already exists)
+# table_definition: |
+#   CREATE TABLE blogposts (
+#         domain text,
+#         published_date timeuuid,
+#         url text,
+#         author text,
+#         title text,
+#         body text,
+#         PRIMARY KEY(domain, published_date)
+#   ) WITH CLUSTERING ORDER BY (published_date DESC)
+#     AND compaction = { 'class':'LeveledCompactionStrategy' }
+#     AND comment='A table to hold blog posts'
+### Column Distribution Specifications ###
+# // x { id: Number,
+# // x   title: String,
+# // x   artist: String,
+# // x   genre: String,
+# // x   album: String, //name
+# // x  albumArt: String,
+# // x  songFile: String,
+# // x  createdAt: Number }
+#id,title,artist,genre,album,albumArt,songFile,createdAt
+columnspec:
+  - name: id
+    size: gaussian(1..8)       #domain names are relatively short
+    population: uniform(1..10M)  #10M possible domains to pick from
+
+  - name: title
+    size: gaussian(10..200)
+    population: uniform(1..10M)
+    # cluster: fixed(1000)         #under each domain we will have max 1000 posts
+
+  - name: artist
+    size: gaussian(10..200)
+    population: uniform(1..10M)
+    # size: uniform(30..300)
+
+  - name: genre                  #titles shouldn't go beyond 200 chars
+    size: gaussian(10..200)
+    population: uniform(1..10M)
+
+  - name: album
+    size: gaussian(10..200)
+    population: uniform(1..10M)
+    # size: uniform(5..20)         #author names should be short
+
+  - name: albumart
+    size: uniform(30..300)
+    # size: gaussian(100..5000)    #the body of the blog post can be long
+
+  - name: songfile
+    size: uniform(30..300)
+
+### Batch Ratio Distribution Specifications ###
+
+insert:
+  partitions: fixed(1)            # Our partition key is the domain so only insert one per batch
+
+  # select:    fixed(1)/1        # We have 1000 posts per domain so 1/1000 will allow 1 post per batch
+
+  batchtype: UNLOGGED             # Unlogged batches
+
+
+#
+# A list of queries you wish to run against the schema
+#
+queries:
+   singlesong:
+      cql: select * from songs where id = ? LIMIT 1
+      fields: samerow
+  #  timeline:
+  #     cql: select url, title, published_date from blogposts where domain = ? LIMIT 10
+  #     fields: samerow

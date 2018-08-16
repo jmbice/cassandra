@@ -1,0 +1,55 @@
+//////////Bulk Loader
+./cassandra-loader -f /Users/jordan_bice/documents/hack-reactor/sdc/comments/dataGen/data/cassandra.csv -host 127.0.0.1 -skipRows 1 -schema "soundofcloud.comments_replies_bySong(song_id, comment_id, reply_id, comment_author, comment_avatar, comment_timestamp, comment_text, reply_author, reply_avatar, reply_timestamp, reply_text)"
+
+
+
+//////////Sample update
+
+UPDATE soundofcloud.comments_replies_bySong SET comment_text = 'Changed!'  WHERE song_id=1 AND comment_id = 1 AND reply_id= 0;
+
+
+//////////Sample Comment Insert
+
+INSERT INTO soundofcloud.comments_replies_bySong (song_id, comment_id, reply_id, comment_author, comment_avatar, comment_timestamp, comment_text, reply_author, reply_avatar, reply_timestamp, reply_text)
+  VALUES(
+    3,
+    1,
+    0,
+    'Fred',
+    '33',
+    '22332',
+    'Earliest post EVER!',
+    null,
+    null,
+    null,
+    null
+  );
+
+///////Sample reply insert
+
+INSERT INTO soundofcloud.comments_replies_bySong (song_id, comment_id, reply_id, comment_author, comment_avatar, comment_timestamp, comment_text, reply_author, reply_avatar, reply_timestamp, reply_text)
+  VALUES(
+    3,
+    1,
+    9,
+    null,
+    null,
+    null,
+    null,
+    'Fred',
+    '33',
+    '22332',
+    'Earliest post EVER!'
+  );
+
+////////Sample deletes:
+
+Delete comment (and subsequent child replies)
+DELETE FROM soundofcloud.comments_replies_bySong where song_id = 1 AND comment_id = 1;
+DELETE FROM soundofcloud.comments_replies_bySong where song_id = 1 AND comment_id = 2;
+
+Delete replies
+DELETE FROM soundofcloud.comments_replies_bySong where song_id = 1 AND comment_id = 2 AND reply_id = 3
+
+Delete song (and all child comments & replies)
+DELETE FROM soundofcloud.comments_replies_bySong where song_id

@@ -1,0 +1,125 @@
+### DML ###
+
+# Keyspace Name
+keyspace: soundofcloud
+
+# The CQL for creating a keyspace (optional if it already exists)
+# keyspace_definition: |
+#   CREATE KEYSPACE stresscql WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+# Table name
+table: comments_replies_bysong
+
+# The CQL for creating a table you wish to stress (optional if it already exists)
+# table_definition: |
+#   CREATE TABLE blogposts (
+#         domain text,
+#         published_date timeuuid,
+#         url text,
+#         author text,
+#         title text,
+#         body text,
+#         PRIMARY KEY(domain, published_date)
+#   ) WITH CLUSTERING ORDER BY (published_date DESC)
+#     AND compaction = { 'class':'LeveledCompactionStrategy' }
+#     AND comment='A table to hold blog posts'
+### Column Distribution Specifications ###
+# // x { id: Number,
+# // x   title: String,
+# // x   artist: String,
+# // x   genre: String,
+# // x   album: String, //name
+# // x  albumArt: String,
+# // x  songFile: String,
+# // x  createdAt: Number }
+#id,title,artist,genre,album,albumArt,songFile,createdAt
+columnspec:
+  - name: song_id
+    size: uniform(0..8)           #song_ids are relatively short
+    population: uniform(1..10M)   #10M rows of data total
+
+  - name: comment_id
+    size: uniform(0..8)
+    population: uniform(1..40M)
+
+  - name: reply_id
+    size: uniform(0..8)
+    population: uniform(1M..20M)
+
+  - name: comment_author
+    size: gaussian(10..100)   #titles shouldn't go beyond 200 char
+    population: uniform(1..60M)
+
+  - name: comment_avatar
+    size: gaussian(10..300)
+    population: uniform(1..60M)
+
+  - name: comment_timestamp
+    size: uniform(30..300)
+    population: uniform(1..60M)
+
+  - name: comment_text
+    size: gaussian(10..300)
+    population: uniform(1..60M)
+
+  - name: reply_author
+    size: gaussian(10..100)
+    population: uniform(1..60M)
+
+  - name: reply_avatar
+    size: uniform(0..1000)
+    population: uniform(1..60M)
+
+  - name: reply_timestamp
+    size: uniform(0..25)
+    population: uniform(1..60M)
+
+  - name: reply_text
+    size: uniform(30..300)
+    population: uniform(1..60M)
+
+### Batch Ratio Distribution Specifications ###
+
+insert:
+  partitions: fixed(1)            # Our partition key is the domain so only insert one per batch
+
+  # select:    fixed(1)/1        # We have 1000 posts per domain so 1/1000 will allow 1 post per batch
+
+  batchtype: UNLOGGED             # Unlogged batches
+
+
+#
+# A list of queries you wish to run against the schema
+#
+queries:
+   song_data:
+      cql: select * from comments_replies_bySong where song_id = ? LIMIT 1
+      fields: samerow
+
+   # singleComment:
+   #    cql: select * from comments_replies_bySong where comment_id = ? LIMIT 1
+   #    fields: samerow
+   #
+   # singleReply:
+   #    cql: select * from comments_replies_bySong where reply_id = ? LIMIT 1
+   #    fields: samerow
+
+   # above is commented out solely because I didn't run these tests on postgres...
+   insert_comment:
+     cql: INSERT INTO comments_replies_bySong (song_id, comment_id, reply_id, comment_author, comment_avatar, comment_timestamp, comment_text, reply_author, reply_avatar, reply_timestamp, reply_text) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     fields: samerow
+
+   insert_reply:
+     cql: INSERT INTO comments_replies_bySong (song_id, comment_id, reply_id, comment_author, comment_avatar, comment_timestamp, comment_text, reply_author, reply_avatar, reply_timestamp, reply_text) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     fields: samerow
+
+   edit_comment:
+     cql: UPDATE comments_replies_bySong SET comment_text = 'Changed!' WHERE song_id = ? AND comment_id = ? AND reply_id= 0
+       # fields: samerow
+
+   edit_reply:
+     cql: UPDATE comments_replies_bySong SET reply_text = 'Changed!' WHERE song_id = ? AND comment_id = ? AND reply_id = ?
+     # fields: samerow
+
+  #  timeline:
+  #     cql: select url, title, published_date from blogposts where domain = ? LIMIT 10
+  #     fields: samerow
